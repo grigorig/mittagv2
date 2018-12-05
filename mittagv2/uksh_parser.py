@@ -33,7 +33,6 @@ class PdfTableParser(ABC):
         kcal_match = re.search(r"""kcal\s*([0-9]+)""", text)
         if price_match:
             menu.reduced_price = float(price_match.group(1).replace(",", "."))
-            menu.student_price = menu.reduced_price
             menu.normal_price = float(price_match.group(2).replace(",", "."))
         elif kcal_match:
             menu.calories = int(kcal_match.group(1))
@@ -114,7 +113,7 @@ class MfcParser(PdfTableParser):
         except NameError:
             menu = model.Menu(menu_type=menu_type,
                 name=element.get_text().strip(), description="",
-                student_price=-1.0, reduced_price=-1.0, normal_price=-1.0,
+                student_price=None, reduced_price=None, normal_price=None,
                 calories=0, vegetarian=None)
             day.menus.append(menu)
 
@@ -173,6 +172,6 @@ class BistroParser(PdfTableParser):
         except NameError:
             menu = model.Menu(menu_type=menu_type,
                 name=element.get_text().strip(), description="",
-                student_price=-1.0, reduced_price=-1.0, normal_price=-1.0,
+                student_price=None, reduced_price=None, normal_price=None,
                 calories=0, vegetarian=vegetarian)
             day.menus.append(menu)
