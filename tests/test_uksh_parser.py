@@ -1,13 +1,13 @@
 import pprint as pp
 import unittest
-import mittagv2.mfc_parser
+import mittagv2.uksh_parser
 import mittagv2.model as model
 
-class TestMfcParser(unittest.TestCase):
+class TestUkshParser(unittest.TestCase):
 
-    def test_parse_pdf(self):
+    def test_parse_pdf_mfc(self):
         fp = open("tests/resources/Speiseplan Cafeteria MFC KW 49.pdf", "rb")
-        parser = mittagv2.mfc_parser.MfcParser(1, fp)
+        parser = mittagv2.uksh_parser.MfcParser(1, fp)
         res = parser.parse()
         #pp.pprint(res)
         self.assertEqual(model.find_menu_by_type(res.days[0], "Menü 1")[0].name, "Kohlroulade")
