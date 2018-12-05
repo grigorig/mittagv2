@@ -11,8 +11,8 @@ import pdfminer.pdfpage
 import pdfminer.converter
 import mittagv2.model as model
 
-class MfcParser:
-    """Parser for MFC Cafeteria PDFs with nutrition information"""
+class PdfTableParser:
+    """Base class for UKSH table PDFs"""
 
     def __init__(self, week_number, fp):
         """Instantiate parser with given file-like object"""
@@ -25,6 +25,31 @@ class MfcParser:
             model.DailyMenu(4, []),
         ]
         self.model = model.WeeklyMenu(week_number, days)
+
+    def parse_textline(self, menu, text):
+        """Parse a line of description text"""
+        price_match = re.search(r"""€\s*([0-9,]+)\s*/\s*€\s*([0-9,]+)""", text)
+        kcal_match = re.search(r"""kcal\s*([0-9]+)""", text)
+        if price_match:
+            menu.reduced_price = float(price_match.group(1).replace(",", "."))
+            menu.student_price = menu.reduced_price
+            menu.normal_price = float(price_match.group(2).replace(",", "."))
+        elif kcal_match:
+            menu.calories = int(kcal_match.group(1))
+        else:
+            menu.description += text.strip() + "\n"
+
+    def clean_model(self):
+        """Apply various cleanups to gathered data"""
+        for day in self.model.days:
+            for menu in day.menus:
+                menu.description = menu.description.strip()
+
+class MfcParser(PdfTableParser):
+    """Parser for MFC Cafeteria PDFs with nutrition information"""
+
+    def __init__(self, week_number, fp):
+        PdfTableParser.__init__(self, week_number, fp)
     
     def parse(self):
         """Parse and fill model data"""
@@ -42,23 +67,21 @@ class MfcParser:
                 # outside of table
                 if element.x0 < 130.88 or element.x1 > 718.24 or element.y0 < 127.64 or element.y1 > 449.56:
                     continue
-                # Menu 1
-                if element.x1 < 329.03:
-                    self.collect_type("Menü 1", element)
-                # Menu 2
-                elif element.x1 < 524.05:
-                    self.collect_type("Menü 2", element)
-                # Zusatzgericht
-                else:
-                    self.collect_type("Zusatzgericht", element)
+                self.collect_base(element)
         self.clean_model()
         return self.model
 
-    def clean_model(self):
-        """Apply various cleanups to gathered data"""
-        for day in self.model.days:
-            for menu in day.menus:
-                menu.description = menu.description.strip()
+    def collect_base(self, element):
+        """Collect elements into model"""
+        # Menu 1
+        if element.x1 < 329.03:
+            self.collect_type("Menü 1", element)
+        # Menu 2
+        elif element.x1 < 524.05:
+            self.collect_type("Menü 2", element)
+        # Zusatzgericht
+        else:
+            self.collect_type("Zusatzgericht", element)
 
     def collect_type(self, menu_type, element):
         """Collect element by menu type"""
@@ -86,15 +109,6 @@ class MfcParser:
         except NameError:
             menu = model.Menu(menu_type=menu_type,
                 name=element.get_text().strip(), description="",
-                student_price=-1.0, reduced_price=-1.0, normal_price=-1.0)
+                student_price=-1.0, reduced_price=-1.0, normal_price=-1.0,
+                calories=0, vegetarian=None)
             day.menus.append(menu)
-
-    def parse_textline(self, menu, text):
-        """Parse a line of description text"""
-        price_match = re.search(r"""€\s*([0-9,]+)\s*/\s*€\s*([0-9,]+)""", text)
-        if price_match:
-            menu.reduced_price = float(price_match.group(1).replace(",", "."))
-            menu.student_price = menu.reduced_price
-            menu.normal_price = float(price_match.group(2).replace(",", "."))
-        else:
-            menu.description += text.strip() + "\n"

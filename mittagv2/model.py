@@ -2,7 +2,7 @@ import recordclass
 
 WeeklyMenu = recordclass.recordclass("WeeklyMenu", "week_number days")
 DailyMenu = recordclass.recordclass("DailyMenu", "day_number menus")
-Menu = recordclass.recordclass("Menu", "menu_type name description student_price reduced_price normal_price")
+Menu = recordclass.recordclass("Menu", "menu_type name description student_price reduced_price normal_price calories vegetarian")
 
 def find_daily_by_id(weekly: WeeklyMenu, day_number: int):
     for day in weekly:
