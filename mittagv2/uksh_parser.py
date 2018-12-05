@@ -1,4 +1,5 @@
 import re
+from abc import ABC, abstractmethod
 import pdfminer.settings
 pdfminer.settings.STRICT = False
 import pdfminer.high_level
@@ -11,7 +12,7 @@ import pdfminer.pdfpage
 import pdfminer.converter
 import mittagv2.model as model
 
-class PdfTableParser:
+class PdfTableParser(ABC):
     """Base class for UKSH table PDFs"""
 
     def __init__(self, week_number, fp):
@@ -39,6 +40,29 @@ class PdfTableParser:
         else:
             menu.description += text.strip() + "\n"
 
+    def parse(self):
+        """Parse and fill model data"""
+        resource_manager = pdfminer.pdfinterp.PDFResourceManager()
+        params = pdfminer.layout.LAParams()
+        params.char_margin = 0.5
+        params.line_margin = 0.25
+        pdf_device = pdfminer.converter.PDFPageAggregator(resource_manager, laparams=params)
+        pdf_interpreter = pdfminer.pdfinterp.PDFPageInterpreter(resource_manager, pdf_device)
+        for page in pdfminer.pdfpage.PDFPage.get_pages(self.fp):
+            pdf_interpreter.process_page(page)
+            layout = pdf_device.get_result()
+            for element in layout:
+                if not isinstance(element, pdfminer.layout.LTTextBoxHorizontal):
+                    continue
+                self.collect_base(element)
+        self.clean_model()
+        return self.model
+    
+    @abstractmethod
+    def collect_base(self, element):
+        """Collect element into model"""
+        pass
+
     def clean_model(self):
         """Apply various cleanups to gathered data"""
         for day in self.model.days:
@@ -50,29 +74,12 @@ class MfcParser(PdfTableParser):
 
     def __init__(self, week_number, fp):
         PdfTableParser.__init__(self, week_number, fp)
-    
-    def parse(self):
-        """Parse and fill model data"""
-        resource_manager = pdfminer.pdfinterp.PDFResourceManager()
-        params = pdfminer.layout.LAParams()
-        pdf_device = pdfminer.converter.PDFPageAggregator(resource_manager, laparams=params)
-        pdf_interpreter = pdfminer.pdfinterp.PDFPageInterpreter(resource_manager, pdf_device)
-        for page in pdfminer.pdfpage.PDFPage.get_pages(self.fp):
-            pdf_interpreter.process_page(page)
-            layout = pdf_device.get_result()
-            for element in layout:
-                # no text
-                if not isinstance(element, pdfminer.layout.LTTextBoxHorizontal):
-                    continue
-                # outside of table
-                if element.x0 < 130.88 or element.x1 > 718.24 or element.y0 < 127.64 or element.y1 > 449.56:
-                    continue
-                self.collect_base(element)
-        self.clean_model()
-        return self.model
 
     def collect_base(self, element):
         """Collect elements into model"""
+        # outside of table
+        if element.x0 < 122.88 or element.x1 > 773.09 or element.y0 < 127.64 or element.y1 > 449.56:
+            return
         # Menu 1
         if element.x1 < 329.03:
             self.collect_type("Menü 1", element)
@@ -85,9 +92,7 @@ class MfcParser(PdfTableParser):
 
     def collect_type(self, menu_type, element):
         """Collect element by menu type"""
-        if element.y1 < 127.64:
-            self.collect_day(5, menu_type, element)
-        elif element.y1 < 192.71:
+        if element.y1 < 192.71:
             self.collect_day(4, menu_type, element)
         elif element.y1 < 256.91:
             self.collect_day(3, menu_type, element)
@@ -111,4 +116,63 @@ class MfcParser(PdfTableParser):
                 name=element.get_text().strip(), description="",
                 student_price=-1.0, reduced_price=-1.0, normal_price=-1.0,
                 calories=0, vegetarian=None)
+            day.menus.append(menu)
+
+
+class BistroParser(PdfTableParser):
+    """Parser for UKSH Bistro PDFs with nutrition information"""
+
+    def __init__(self, week_number, fp):
+        PdfTableParser.__init__(self, week_number, fp)
+
+    def collect_base(self, element):
+        """Collect elements into model"""
+        # outside of table
+        if element.x0 < 122.88 or element.x1 > 773.09 or element.y0 < 92.957 or element.y1 > 497.83:
+            return
+        # Wok Station
+        if element.x1 < 284.85:
+            self.collect_type("Wok Station", False, element)
+        # Vegetarisch
+        elif element.x0 > 284.85 and element.x1 < 447.0:
+            self.collect_type("Vegetarisch", True, element)
+        # Gericht II
+        elif element.x0 > 447.0 and element.x1 < 609.15:
+            self.collect_type("Gericht II", False, element)
+        # Gericht III
+        elif element.x0 > 609.15:
+            self.collect_type("Gericht III", False, element)
+
+    def collect_type(self, menu_type, vegetarian, element):
+        """Collect element by menu type"""
+        if element.y1 < 150.79:
+            # sunday, ignored
+            pass
+        elif element.y1 < 208.64:
+            # saturday, ignored
+            pass
+        elif element.y1 < 266.47:
+            self.collect_day(4, menu_type, vegetarian, element)
+        elif element.y1 < 324.32:
+            self.collect_day(3, menu_type, vegetarian, element)
+        elif element.y1 < 382.15:
+            self.collect_day(2, menu_type, vegetarian, element)
+        elif element.y1 < 440.0:
+            self.collect_day(1, menu_type, vegetarian, element)
+        else:
+            self.collect_day(0, menu_type, vegetarian, element)
+    
+    def collect_day(self, day_number, menu_type, vegetarian, element):
+        """Collect element by day"""
+        day = self.model.days[day_number]
+        try:
+            menus = model.find_menu_by_type(day, menu_type)
+            if len(menus) > 1:
+                raise ValueError("duplicate menu_type")
+            self.parse_textline(menus[0], element.get_text())
+        except NameError:
+            menu = model.Menu(menu_type=menu_type,
+                name=element.get_text().strip(), description="",
+                student_price=-1.0, reduced_price=-1.0, normal_price=-1.0,
+                calories=0, vegetarian=vegetarian)
             day.menus.append(menu)
