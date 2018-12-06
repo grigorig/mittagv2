@@ -9,7 +9,7 @@ class TestMarliParser(unittest.TestCase):
         with open("tests/resources/marli.html", "rb") as html:
             parser = mittagv2.marli_parser.MarliParser(1)
             res = parser.parse(html.read().decode("UTF-8"))
-            pp.pprint(res)
+            #pp.pprint(res)
             self.assertEqual(len(res.days[0].menus), 1)
             self.assertEqual(model.find_menu_by_type(res.days[0], "")[0].name, "Geräuchertet Putenbrust")
             self.assertEqual(model.find_menu_by_type(res.days[4], "")[0].name, "Kartoffelsuppe")
