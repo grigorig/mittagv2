@@ -50,8 +50,9 @@ class MensaParser:
             if row.tag != "tr":
                 continue
             menu_type = "Menü {}".format(menu_index)
-            self.parse_row(self.model.days[day_number], menu_type, row)
-            menu_index += 1
+            valid = self.parse_row(self.model.days[day_number], menu_type, row)
+            if valid:
+                menu_index += 1
 
     def parse_attributes(self, html):
         """Parse attributes for a menu"""
@@ -84,16 +85,16 @@ class MensaParser:
         """Parse a row with menu info"""
         cols = html.getchildren()
         if len(cols) != 3:
-            return
+            return False
         if cols[0].tag != "td":
-            return
+            return False
         description = self.parse_description(cols[0])
         if len(description) == 0:
-            return
+            return False
         vegetarian = self.parse_attributes(cols[1])
         prices = self.parse_prices(cols[2].text_content().strip())
         if prices is None:
-            return
+            return False
         price_student, price_reduced, price_normal = prices
         name = self.extract_menu_name(description)
         menu = model.Menu(menu_type=menu_type, name=name,
@@ -101,3 +102,4 @@ class MensaParser:
             reduced_price=price_reduced, normal_price=price_normal,
             calories=None, vegetarian=vegetarian)
         day.menus.append(menu)
+        return True
