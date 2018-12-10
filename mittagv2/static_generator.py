@@ -3,62 +3,27 @@ from html import escape
 from datetime import date
 import datetime
 from string import Template
-import requests
-from mittagv2.marli_parser import MarliParser
-from mittagv2.mensa_parser import MensaParser
-from mittagv2.uksh_parser import BistroParser, MfcParser
+import mittagv2.scraper as scraper
+import mittagv2.utils as utils
 
 class StaticSiteGenerator:
     """Generate a basic static site with current day's menu"""
 
     def __init__(self):
-        pass
+        self.scraper = scraper.Scraper()
     
-    def current_week(self):
-        """Get current week number"""
-        return date.today().isocalendar()[1]
-    
-    def current_day(self):
-        """Return current day number, 0 = monday"""
-        return date.today().isocalendar()[2] - 1
-
-    def scrape_bistro(self, week_number=None):
-        """Scrape UKSH bistro data"""
-        if not week_number:
-            week_number = self.current_week()
-        pdf = requests.get("https://www.uksh.de/uksh_media/Speisepl%C3%A4ne/L%C3%BCbeck+_+UKSH_Bistro/Speiseplan+Bistro+KW+{}.pdf".format(week_number)).content
-        menu = BistroParser(week_number, io.BytesIO(pdf)).parse()
-        return menu
-
-    def scrape_mfc(self, week_number=None):
-        """Scrape MFC data"""
-        if not week_number:
-            week_number = self.current_week()
-        pdf = requests.get("https://www.uksh.de/uksh_media/Speisepl%C3%A4ne/L%C3%BCbeck+_+MFC+Cafeteria/Speiseplan+Cafeteria+MFC+KW+{}.pdf".format(week_number)).content
-        menu = MfcParser(week_number, io.BytesIO(pdf)).parse()
-        return menu
-
-    def scrape_mensa(self):
-        """Scrape Mensa data"""
-        week_number = self.current_week()
-        html = requests.get("https://www.studentenwerk.sh/de/essen/standorte/luebeck/mensa-luebeck/speiseplan.html").content.decode("UTF-8")
-        menu = MensaParser(week_number).parse(html)
-        return menu
-    
-    def scrape_marli(self):
-        """Scrape Marli data"""
-        week_number = self.current_week()
-        html = requests.get("https://www.marli.de/rs/gastronomie_und_begegnung/mittagsangebote/index.html").content.decode("UTF-8")
-        menu = MarliParser(week_number).parse(html)
-        return menu
+    def get_menus(self):
+        """Get menu data"""
+        bistro_menu, _ = self.scraper.scrape_bistro()
+        mfc_menu, _ = self.scraper.scrape_mfc()
+        marli_menu, _ = self.scraper.scrape_marli()
+        mensa_menu, _ = self.scraper.scrape_mensa()
+        return bistro_menu, mfc_menu, marli_menu, mensa_menu
     
     def scrape_all(self):
         """Scrape all current data"""
-        day_number = self.current_day()
-        bistro_menu = self.scrape_bistro()
-        mfc_menu = self.scrape_mfc()
-        marli_menu = self.scrape_marli()
-        mensa_menu = self.scrape_mensa()
+        day_number = utils.current_day()
+        bistro_menu, mfc_menu, marli_menu, mensa_menu = self.get_menus()
         bistro_html = self.day_to_html(bistro_menu.days[day_number])
         marli_html = self.day_to_html(marli_menu.days[day_number])
         mfc_html = self.day_to_html(mfc_menu.days[day_number])
@@ -68,7 +33,7 @@ class StaticSiteGenerator:
             html = template.substitute(MFC_MENUS=mfc_html, MARLI_MENUS=marli_html,
                 MENSA_MENUS=mensa_html, BISTRO_MENUS=bistro_html,
                 DATE_STRING=datetime.datetime.now().date().isoformat(),
-                WEEK_NUMBER=self.current_week())
+                WEEK_NUMBER=utils.current_week())
             print(html)
 
     def day_to_html(self, day):
