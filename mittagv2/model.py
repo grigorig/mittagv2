@@ -1,6 +1,6 @@
 import recordclass
 
-WeeklyMenu = recordclass.recordclass("WeeklyMenu", "week_number days")
+WeeklyMenu = recordclass.recordclass("WeeklyMenu", "week_number days, notice")
 DailyMenu = recordclass.recordclass("DailyMenu", "day_number menus")
 Menu = recordclass.recordclass("Menu", "menu_type name description student_price reduced_price normal_price calories vegetarian")
 

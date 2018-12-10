@@ -135,6 +135,8 @@ class Scraper:
             "source_name": name,
             "menus": weekly
         }
+        if menu.notice:
+            weekly["notice"] = menu.notice
         for daily in menu.days:
             day = {
                 "day": daily.day_number,

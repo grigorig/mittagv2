@@ -25,7 +25,7 @@ class PdfTableParser(ABC):
             model.DailyMenu(3, []),
             model.DailyMenu(4, []),
         ]
-        self.model = model.WeeklyMenu(week_number, days)
+        self.model = model.WeeklyMenu(week_number, days, None)
 
     def parse_textline(self, menu, text):
         """Parse a line of description text"""

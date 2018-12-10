@@ -21,7 +21,7 @@ class MarliParser:
             model.DailyMenu(3, []),
             model.DailyMenu(4, []),
         ]
-        self.model = model.WeeklyMenu(week_number, days)
+        self.model = model.WeeklyMenu(week_number, days, None)
         self.current_day = None
 
     def extract_menu_name(self, description):
@@ -48,6 +48,10 @@ class MarliParser:
         menu = menus[0]
         for el in menu.itertext():
             self.collect_menus(el.strip())
+        weekly_notice = tree.xpath("/html/body/div[2]/div/main/div[2]/p[5]")
+        if len(weekly_notice) > 0:
+            prefix = "Zusatzangebot:\n\n"
+            self.model.notice = prefix + "\n".join(weekly_notice[0].itertext())
         self.clean_model()
         return self.model
     

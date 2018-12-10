@@ -24,10 +24,10 @@ class StaticSiteGenerator:
         """Scrape all current data"""
         day_number = utils.current_day()
         bistro_menu, mfc_menu, marli_menu, mensa_menu = self.get_menus()
-        bistro_html = self.day_to_html(bistro_menu.days[day_number])
-        marli_html = self.day_to_html(marli_menu.days[day_number])
-        mfc_html = self.day_to_html(mfc_menu.days[day_number])
-        mensa_html = self.day_to_html(mensa_menu.days[day_number])
+        bistro_html = self.day_to_html(bistro_menu.days[day_number], bistro_menu)
+        marli_html = self.day_to_html(marli_menu.days[day_number], marli_menu)
+        mfc_html = self.day_to_html(mfc_menu.days[day_number], mfc_menu)
+        mensa_html = self.day_to_html(mensa_menu.days[day_number], mensa_menu)
         with open("mittagv2/resources/static_template.html") as template_file:
             template = Template(template_file.read())
             html = template.substitute(MFC_MENUS=mfc_html, MARLI_MENUS=marli_html,
@@ -36,10 +36,12 @@ class StaticSiteGenerator:
                 WEEK_NUMBER=utils.current_week())
             print(html)
 
-    def day_to_html(self, day):
+    def day_to_html(self, day, week):
         html = ""
         for menu in day.menus:
             html += self.menu_to_html(menu)
+        if week.notice:
+            html += "<p>{}</p>".format(escape(week.notice).replace("\n", "<br>"))
         return html
     
     def menu_to_html(self, menu):

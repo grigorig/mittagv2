@@ -13,7 +13,7 @@ class MensaParser:
             model.DailyMenu(3, []),
             model.DailyMenu(4, []),
         ]
-        self.model = model.WeeklyMenu(week_number, days)
+        self.model = model.WeeklyMenu(week_number, days, None)
         self.current_day = None
 
     def extract_menu_name(self, description):
