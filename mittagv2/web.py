@@ -30,6 +30,7 @@ class Root:
     @cherrypy.tools.no_index()
     @cherrypy.tools.restrict_methods(methods = ["GET"])
     def index(self, day=None):
+        cherrypy.response.headers["Content-Type"] = "text/html; charset=UTF-8"
         try:
             return self._get_all(day)
         except:
