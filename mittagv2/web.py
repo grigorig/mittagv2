@@ -79,11 +79,22 @@ class Root:
         else:
             mensa_html = "<p>Keine Daten vorhanden!</p>"
         calculated_day = datetime.datetime.now().date().day - utils.current_day() + day_number
+        day_names = {
+            0: "Montag",
+            1: "Dienstag",
+            2: "Mittwoch",
+            3: "Donnerstag",
+            4: "Freitag",
+            5: "Samstag",
+            6: "Sonntag"
+        }
+        date_string = "{}, {}".format(day_names[day_number],
+            datetime.datetime.now().date().replace(day=calculated_day).isoformat())
         with open("mittagv2/resources/dynamic_template.html") as template_file:
             template = Template(template_file.read())
             html = template.substitute(MFC_MENUS=mfc_html, MARLI_MENUS=marli_html,
                 MENSA_MENUS=mensa_html, BISTRO_MENUS=bistro_html,
-                DATE_STRING=datetime.datetime.now().date().replace(day=calculated_day).isoformat(),
+                DATE_STRING=date_string,
                 WEEK_NUMBER=utils.current_week())
             #print(html)
             return html
