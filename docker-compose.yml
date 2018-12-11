@@ -1,0 +1,44 @@
+version: "2.2"
+services:
+  couchdb:
+    restart: always
+    image: couchdb:2.3
+    volumes:
+      - db:/opt/couchdb/data/
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
+    #ports:
+    #  - 127.0.0.1:5985:5984
+    networks:
+      - backend
+  scraper:
+    restart: always
+    image: mittagv2:latest
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
+      - COUCHDB_URL=http://couchdb:5984
+    command: python3 -m mittagv2.scraper
+    depends_on:
+      - couchdb
+    networks:
+      - backend
+  web:
+    restart: always
+    image: mittagv2:latest
+    environment:
+      - COUCHDB_USER=admin
+      - COUCHDB_PASSWORD=admin
+      - COUCHDB_URL=http://couchdb:5984
+    command: python3 -m mittagv2.web
+    depends_on:
+      - couchdb
+    ports:
+      - 127.0.0.1:1234:1234
+    networks:
+      - backend
+volumes:
+  db:
+networks:
+  backend:
