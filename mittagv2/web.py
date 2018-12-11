@@ -28,7 +28,7 @@ class Root:
 
     @cherrypy.expose()
     @cherrypy.tools.no_index()
-    @cherrypy.tools.restrict_methods(methods = ["GET"])
+    @cherrypy.tools.restrict_methods(methods = ["GET", "HEAD"])
     def index(self, day=None):
         cherrypy.response.headers["Content-Type"] = "text/html; charset=UTF-8"
         try:
