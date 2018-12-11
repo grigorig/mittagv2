@@ -26,7 +26,7 @@ class MarliParser:
 
     def extract_menu_name(self, description):
         """Extract menu name from description"""
-        name_match = re.match(r"""^\s*([\w-]+(\s+[\w-]+)??)(\s*mit|\s+in|\s+an|\s*\n|\s*,)""",
+        name_match = re.match(r"""^\s*([\w-]+(\s+[\w-]+)??)(\s*mit|\s+in|\s+an|\s+vom|\s*\n|\s*,)""",
             description, flags=re.I|re.M)
         if not name_match:
             return " ".join(re.split(r"""\s+""", description)[:3])

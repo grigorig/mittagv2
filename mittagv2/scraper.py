@@ -174,13 +174,7 @@ class CouchScraper(Scraper):
     """Scraper with CouchDB data storage"""
 
     def __init__(self, user=None, auth=None, url=None):
-        if not user:
-            user = os.getenv("COUCHDB_USER", "admin")
-        if not auth:
-            auth = os.getenv("COUCHDB_PASSWORD", "admin")
-        if not url:
-            url = os.getenv("COUCHDB_URL", "http://127.0.0.1:5984")
-        self.db = CouchDB(user, auth, url=url, connect=True)
+        self.db = utils.couch_connect(user, auth, url)
         self.scrapings = self.db.create_database("mv2_scrapings")
         self.menus = self.db.create_database("mv2_menus")
         utils.create_couch_views(self.menus)

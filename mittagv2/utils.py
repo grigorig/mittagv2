@@ -1,5 +1,6 @@
+import os
 from datetime import date, datetime
-
+from cloudant import CouchDB
 
 def current_year():
     """Get current year (local timezone)"""
@@ -20,6 +21,15 @@ def current_day():
 def timestamp_rfc3339():
     """Generate RC3339 compliant UTC timestamp"""
     return datetime.utcnow().isoformat("T") + "Z"
+
+def couch_connect(user=None, auth=None, url=None):
+    if not user:
+        user = os.getenv("COUCHDB_USER", "admin")
+    if not auth:
+        auth = os.getenv("COUCHDB_PASSWORD", "admin")
+    if not url:
+        url = os.getenv("COUCHDB_URL", "http://127.0.0.1:5984")
+    return CouchDB(user, auth, url=url, connect=True)
 
 def create_couch_views(db):
     design_doc = {
