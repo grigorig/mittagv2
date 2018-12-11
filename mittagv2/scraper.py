@@ -75,11 +75,16 @@ class Scraper:
         """Start a scheduling scraper. This schedules scraping for each Monday
         morning. It also uses a retry mechanism to guard against intermittent
         failures"""
+        self.check_scraping_status()
         schedule.every().monday.at("07:00").do(self._scrape_job)
         #schedule.every(2).minutes.do(self._scrape_job)
         while True:
             schedule.run_pending()
             time.sleep(30)
+    
+    def check_scraping_status(self):
+        """Check scraping status (and fetch if needed)"""
+        pass
     
     def _scrape_job(self):
         """Start off scraping threads for all menus"""
@@ -91,8 +96,7 @@ class Scraper:
             (self.scrape_mfc, "uksh-cafeteria")
         )
         for scraper, name in scrapings:
-            t = threading.Thread(target=lambda: self._scrape_single(scraper, name))
-            t.start()
+            self._scrape_single_background(scraper, name)
     
     def _scrape_single(self, scraper, name):
         """Scrape single menu (with retrying)"""
@@ -109,6 +113,11 @@ class Scraper:
             except Exception as ex:
                 self._scrape_log(name, False, error=traceback.format_exc(limit=1))
                 time.sleep(Scraper.RETRY_WAIT_TIME)
+    
+    def _scrape_single_background(self, scraper, name):
+        """Scrape a single menu in background"""
+        t = threading.Thread(target=lambda: self._scrape_single(scraper, name))
+        t.start()
     
     def _scrape_log(self, name, success, blob=None, error=None):
         """Store scraping log - raw data and metadata from scraping"""
@@ -178,6 +187,21 @@ class CouchScraper(Scraper):
         self.scrapings = self.db.create_database("mv2_scrapings")
         self.menus = self.db.create_database("mv2_menus")
         utils.create_couch_views(self.menus)
+
+    def check_scraping_status(self):
+        sources = {
+            "swsh-mensa": self.scrape_mensa,
+            "marli-sb": self.scrape_marli,
+            "uksh-cafeteria": self.scrape_mfc,
+            "uksh-bistro": self.scrape_bistro
+        }
+        for s in sources.keys():
+            menu_key = "{}/{}".format(s, utils.current_year_week())
+            res = self.menus.get_view_result("_design/views", "bySourceNameYearWeek", key=menu_key).all()
+            if len(res) == 0:
+                logging.info("{} has no menu for current week, trying to scrape".format(s))
+                self._scrape_single_background(sources[s], s)
+
 
     def _store_scrape_log(self, document, blob=None):
         doc = self.scrapings.create_document(document)
