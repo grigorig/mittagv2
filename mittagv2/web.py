@@ -141,10 +141,10 @@ def start_web():
 
     app_config = {
         '/': {
-            'tools.staticdir.on': False,
-            #'tools.staticdir.root': os.path.abspath(os.getcwd()),
-            #'tools.staticdir.dir': './mittagv2/resources/web_static',
-            #'tools.staticdir.index': 'index.html',
+            'tools.staticdir.on': True,
+            'tools.staticdir.root': os.path.abspath(os.getcwd()) + "/mittagv2/resources/web_static/",
+            'tools.staticdir.dir': './',
+            'tools.staticdir.index': 'index.html',
         },
     }
     
