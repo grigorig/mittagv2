@@ -75,8 +75,8 @@ class Scraper:
         """Start a scheduling scraper. This schedules scraping for each Monday
         morning. It also uses a retry mechanism to guard against intermittent
         failures"""
-        #schedule.every().monday.at("08:00").do(self._scrape_job)
-        schedule.every(2).minutes.do(self._scrape_job)
+        schedule.every().monday.at("07:00").do(self._scrape_job)
+        #schedule.every(2).minutes.do(self._scrape_job)
         while True:
             schedule.run_pending()
             time.sleep(30)
