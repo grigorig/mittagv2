@@ -29,9 +29,9 @@ class PdfTableParser(ABC):
 
     def parse_textline(self, menu, text):
         """Parse a line of description text"""
-        price_match = re.search(r"""€\s*([0-9,]+)\s*/\s*€\s*([0-9,]+)""", text)
+        price_match = re.search(r"""€?\s*([0-9,]+)\s*€?\s*/\s*€?\s*([0-9,]+)\s*€?""", text)
         kcal_match = re.search(r"""kcal\s*([0-9]+)""", text)
-        if price_match:
+        if "€" in text and price_match:
             menu.reduced_price = float(price_match.group(1).replace(",", "."))
             menu.normal_price = float(price_match.group(2).replace(",", "."))
         elif kcal_match:
