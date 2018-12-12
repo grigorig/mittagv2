@@ -66,8 +66,8 @@ class MensaParser:
     
     def parse_prices(self, prices):
         """Parse prices string into numbers"""
-        match = re.search(r"""([0-9,]+)\s*€\s*/\s*([0-9,]+)\s*€\s*/\s*([0-9,]+)\s*€""", prices)
-        if match:
+        match = re.search(r"""€?\s*([0-9,]+)\s*€?\s*/\s*€?\s*([0-9,]+)\s*€?\s*/\s*€?\s*([0-9,]+)\s*€?""", prices)
+        if "€" in prices and match:
             return (
                 float(match.group(1).replace(",", ".")),
                 float(match.group(2).replace(",", ".")),
@@ -78,7 +78,7 @@ class MensaParser:
     
     def parse_description(self, desc):
         """Parse description entry"""
-        elements = [ x.strip() for x in desc.itertext("strong") ]
+        elements = [ x.strip() for x in desc.itertext("strong", "br") ]
         return " ".join(elements).strip()
 
     def parse_row(self, day, menu_type, html):
