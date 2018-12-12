@@ -187,6 +187,7 @@ class CouchScraper(Scraper):
         self.scrapings = self.db.create_database("mv2_scrapings")
         self.menus = self.db.create_database("mv2_menus")
         utils.create_couch_views(self.menus)
+        self._last_scrape = None
 
     def check_scraping_status(self):
         sources = {
@@ -205,11 +206,17 @@ class CouchScraper(Scraper):
 
     def _store_scrape_log(self, document, blob=None):
         doc = self.scrapings.create_document(document)
+        scrape_name = "{}_{}.bin".format(document["source_name"], utils.current_year_week())
         if blob != None:
-            doc.put_attachment("data.bin", "application/octet-stream", blob)
+            doc.put_attachment(scrape_name, "application/octet-stream", blob)
+        self._last_scrape = doc
     
     def _store_menu(self, document):
+        if not self._last_scrape:
+            raise RuntimeError("store scrape first")
+        document["scrape_id"] = self._last_scrape["_id"]
         self.menus.create_document(document)
+        self._last_scrape = None
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
