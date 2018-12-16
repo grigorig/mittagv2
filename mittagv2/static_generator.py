@@ -1,4 +1,5 @@
 import io
+import sys
 from html import escape
 from datetime import date
 import datetime
@@ -9,31 +10,32 @@ import mittagv2.utils as utils
 class StaticSiteGenerator:
     """Generate a basic static site with current day's menu"""
 
-    def __init__(self):
+    def __init__(self, week_number=None, day_number=None):
         self.scraper = scraper.Scraper()
+        self._week = week_number if week_number != None else utils.current_week() 
+        self._day = day_number if day_number != None else utils.current_day()
     
     def get_menus(self):
         """Get menu data"""
-        bistro_menu, _ = self.scraper.scrape_bistro()
-        mfc_menu, _ = self.scraper.scrape_mfc()
+        bistro_menu, _ = self.scraper.scrape_bistro(week_number=self._week)
+        mfc_menu, _ = self.scraper.scrape_mfc(week_number=self._week)
         marli_menu, _ = self.scraper.scrape_marli()
         mensa_menu, _ = self.scraper.scrape_mensa()
         return bistro_menu, mfc_menu, marli_menu, mensa_menu
     
     def scrape_all(self):
         """Scrape all current data"""
-        day_number = utils.current_day()
         bistro_menu, mfc_menu, marli_menu, mensa_menu = self.get_menus()
-        bistro_html = self.day_to_html(bistro_menu.days[day_number], bistro_menu)
-        marli_html = self.day_to_html(marli_menu.days[day_number], marli_menu)
-        mfc_html = self.day_to_html(mfc_menu.days[day_number], mfc_menu)
-        mensa_html = self.day_to_html(mensa_menu.days[day_number], mensa_menu)
+        bistro_html = self.day_to_html(bistro_menu.days[self._day], bistro_menu)
+        marli_html = self.day_to_html(marli_menu.days[self._day], marli_menu)
+        mfc_html = self.day_to_html(mfc_menu.days[self._day], mfc_menu)
+        mensa_html = self.day_to_html(mensa_menu.days[self._day], mensa_menu)
         with open("mittagv2/resources/static_template.html") as template_file:
             template = Template(template_file.read())
             html = template.substitute(MFC_MENUS=mfc_html, MARLI_MENUS=marli_html,
                 MENSA_MENUS=mensa_html, BISTRO_MENUS=bistro_html,
                 DATE_STRING=datetime.datetime.now().date().isoformat(),
-                WEEK_NUMBER=utils.current_week())
+                WEEK_NUMBER=self._week)
             print(html)
 
     def day_to_html(self, day, week):
@@ -72,5 +74,11 @@ class StaticSiteGenerator:
         return html
 
 if __name__ == "__main__":
-    generator = StaticSiteGenerator()
+    week_number = None
+    day_number = None
+    if len(sys.argv) > 1:
+        week_number = int(sys.argv[1])
+    if len(sys.argv) > 2:
+        day_number = int(sys.argv[2])
+    generator = StaticSiteGenerator(week_number, day_number)
     generator.scrape_all()
