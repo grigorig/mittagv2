@@ -164,6 +164,8 @@ class BistroParser(PdfTableParser):
     def collect_day(self, day_number, menu_type, vegetarian, element):
         """Collect element by day"""
         day = self.model.days[day_number]
+        if element.get_text().strip() == "Zusatzgericht":
+            return
         try:
             menus = model.find_menu_by_type(day, menu_type)
             if len(menus) > 1:
