@@ -1,0 +1,88 @@
+@media (max-width: 50rem) {
+    body, html {
+        width: 100%;
+        overflow: auto;
+    }
+}
+
+@media (max-width: 50rem) {
+    body {
+        scroll-snap-points-x: repeat(100%);
+        scroll-snap-type: mandatory;
+        -webkit-scroll-snap-points-x: repeat(100%);
+        -webkit-scroll-snap-type: mandatory;
+        -ms-scroll-snap-points-x: repeat(100%);
+        -ms-scroll-snap-type: mandatory;
+    }
+    table {
+        width: 400%;
+    }
+}
+
+@media (min-width: 100rem) {
+    body {
+        width: 100rem;
+    }
+}
+
+body {
+    padding: 0.5rem 0;
+    margin: 0 auto;
+    text-align: center;
+}
+
+body > a {
+    display: block;
+    text-align: center;
+    width: 100%;
+    background-color:#19199d;
+    color:#fff;
+    font-size: 15px;
+}
+
+table {
+    box-sizing: border-box;
+    margin: 1em 0;
+    padding: 0;
+    border-collapse: collapse;
+    border: 1px #000 solid;
+    font-size: 15px;
+    border: none;
+}
+
+th {
+    background-color: #19199d;
+}
+
+th a {
+    color: #fff;
+}
+
+th a:hover, th a:active {
+    color: #fdd;
+}
+
+td, th {
+    box-sizing: border-box;
+    border: 0;
+    border-right: 1px #000 solid;
+    width: 25%;
+    padding: 0.7rem;
+    margin: 0;
+}
+
+td {
+    text-align: left;
+    background: #eee;
+    border-radius: 5px;
+}
+
+tr td:nth-child(2),
+tr td:nth-child(4) {
+    background: #ddd;
+}
+
+tr td, tr th {
+    border: none;
+    padding: 12px;
+}
