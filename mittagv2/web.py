@@ -100,7 +100,6 @@ class Root:
                 MENSA_MENUS=mensa_html, BISTRO_MENUS=bistro_html,
                 DATE_STRING=date_string,
                 WEEK_NUMBER=utils.current_week())
-            #print(html)
             return html
 
     def _day_to_html(self, day, week):
@@ -113,7 +112,6 @@ class Root:
     
     def _menu_to_html(self, menu):
         name = menu["name"]
-        print(menu)
         if "menu_type" in menu and len(menu["menu_type"]) > 0:
             name = "{}: {}".format(menu["menu_type"], menu["name"])
         html = "<p><strong>{}</strong></p>".format(escape(name))
