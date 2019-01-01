@@ -29,7 +29,7 @@ class Scraper:
         """Scrape UKSH bistro data"""
         if not week_number:
             week_number = utils.current_week()
-        url = "https://www.uksh.de/uksh_media/Speisepl%C3%A4ne/L%C3%BCbeck+_+UKSH_Bistro/Speiseplan+Bistro+KW+{}.pdf".format(week_number)
+        url = "https://www.uksh.de/uksh_media/Speisepl%C3%A4ne/L%C3%BCbeck+_+UKSH_Bistro/Speiseplan+Bistro+KW+{:02}.pdf".format(week_number)
         pdf = requests.get(url).content
         try:
             menu = BistroParser(week_number, io.BytesIO(pdf)).parse()
@@ -41,7 +41,7 @@ class Scraper:
         """Scrape MFC data"""
         if not week_number:
             week_number = utils.current_week()
-        url = "https://www.uksh.de/uksh_media/Speisepl%C3%A4ne/L%C3%BCbeck+_+MFC+Cafeteria/Speiseplan+Cafeteria+MFC+KW+{}.pdf".format(week_number)
+        url = "https://www.uksh.de/uksh_media/Speisepl%C3%A4ne/L%C3%BCbeck+_+MFC+Cafeteria/Speiseplan+Cafeteria+MFC+KW+{:02}.pdf".format(week_number)
         pdf = requests.get(url).content
         try:
             menu = MfcParser(week_number, io.BytesIO(pdf)).parse()
