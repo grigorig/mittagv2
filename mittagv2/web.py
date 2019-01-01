@@ -66,19 +66,19 @@ class Root:
         if day_number < 0 or day_number > 6:
             raise cherrypy.HTTPError(400, "illegal day number")
         bistro_menu, mfc_menu, marli_menu, mensa_menu = self._get_menus()
-        if bistro_menu and day_number < len(bistro_menu["days"]):
+        if bistro_menu and "days" in bistro_menu and day_number < len(bistro_menu["days"]):
             bistro_html = self._day_to_html(bistro_menu["days"][day_number], bistro_menu)
         else:
             bistro_html = "<p>Keine Daten vorhanden!</p>"
-        if marli_menu and day_number < len(bistro_menu["days"]):
+        if marli_menu and "days" in marli_menu and day_number < len(marli_menu["days"]):
             marli_html = self._day_to_html(marli_menu["days"][day_number], marli_menu)
         else:
             marli_html = "<p>Keine Daten vorhanden!</p>"
-        if mfc_menu and day_number < len(bistro_menu["days"]):
+        if mfc_menu and "days" in mfc_menu and day_number < len(mfc_menu["days"]):
             mfc_html = self._day_to_html(mfc_menu["days"][day_number], mfc_menu)
         else:
             mfc_html = "<p>Keine Daten vorhanden!</p>"
-        if mensa_menu and day_number < len(bistro_menu["days"]):
+        if mensa_menu and "days" in mensa_menu and day_number < len(mensa_menu["days"]):
             mensa_html = self._day_to_html(mensa_menu["days"][day_number], mensa_menu)
         else:
             mensa_html = "<p>Keine Daten vorhanden!</p>"
