@@ -99,7 +99,7 @@ class Root:
             html = template.substitute(MFC_MENUS=mfc_html, MARLI_MENUS=marli_html,
                 MENSA_MENUS=mensa_html, BISTRO_MENUS=bistro_html,
                 DATE_STRING=date_string,
-                WEEK_NUMBER=utils.current_week())
+                WEEK_NUMBER="{:02}".format(utils.current_week()))
             return html
 
     def _day_to_html(self, day, week):
