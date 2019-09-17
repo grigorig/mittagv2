@@ -35,7 +35,8 @@ class Root:
             return self._get_all(day)
         except cherrypy.HTTPError as ex:
             raise ex
-        except:
+        except Exception as ex:
+            print(ex)
             raise cherrypy.HTTPError(500)
 
     def _get_menus(self):
