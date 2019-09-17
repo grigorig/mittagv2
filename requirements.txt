@@ -4,5 +4,5 @@ recordclass==0.7
 lxml==4.2.5
 requests==2.20.1
 schedule==0.5.0
-CherryPy==16.0.2
-cloudant==2.10.1
+CherryPy==18.2.0
+cloudant==2.12.0
