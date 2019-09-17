@@ -21,10 +21,85 @@ def restrict_methods(methods):
         raise cherrypy.HTTPError(405)
 cherrypy.tools.restrict_methods = cherrypy.Tool('before_handler', restrict_methods)
 
+@cherrypy.popargs("menu_id")
+class Menus:
+    def __init__(self):
+        self._db = utils.couch_connect()
+    
+    @cherrypy.expose()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.restrict_methods(methods = ["GET", "HEAD"])
+    def index(self, menu_id=None):
+        if menu_id is None:
+            menus = self._db["mv2_menus"].get_view_result("_design/views", "byYearWeek").all()
+            return [ m["id"] for m in menus ]
+        else:
+            return self._single(menu_id)
+
+    def _single(self, menu_id):
+        try:
+            menus = self._db["mv2_menus"][menu_id]
+            del menus["_id"]
+            del menus["_rev"]
+            return menus
+        except KeyError:
+            raise cherrypy.HTTPError(404)
+
+@cherrypy.popargs("scraping")
+class Scrapings:
+    def __init__(self):
+        self._db = utils.couch_connect()
+
+    @cherrypy.expose()
+    @cherrypy.tools.json_out()
+    @cherrypy.tools.restrict_methods(methods = ["GET", "HEAD"])
+    def index(self, scraping=None):
+        if scraping is None:
+            scrapings = self._db["mv2_scrapings"]
+            return [ m["_id"] for m in scrapings ]
+        else:
+            return self._single(scraping)
+
+    def _single(self, scraping):
+        try:
+            scraped = self._db["mv2_scrapings"][scraping]
+            del scraped["_id"]
+            del scraped["_rev"]
+            return scraped
+        except KeyError:
+            raise cherrypy.HTTPError(404)
+        except:
+            raise cherrypy.HTTPError(500)
+
+    @cherrypy.expose
+    @cherrypy.tools.restrict_methods(methods = ["GET", "HEAD"])
+    def attachment(self, scraping=None):
+        try:
+            scraped = self._db["mv2_scrapings"][scraping]
+            attachment_name = list(scraped["_attachments"].keys())[0]
+            attachment_meta = scraped["_attachments"][attachment_name]
+            cherrypy.response.headers["Content-Type"] = attachment_meta["content_type"]
+            cherrypy.response.headers["Content-Disposition"] = "attachment; filename=\"{}\"".format(attachment_name)
+            return scraped.get_attachment(attachment_name)
+        except KeyError:
+            raise cherrypy.HTTPError(404)
+        except:
+            raise cherrypy.HTTPError(500)
+
+class V1:
+    def __init__(self):
+        self.menus = Menus()
+        self.scrapings = Scrapings()
+
+class Api:
+    def __init__(self):
+        self.v1 = V1()
+
 class Root:
     def __init__(self):
         self._view_template = Template(open("mittagv2/resources/dynamic_template.html").read())
         self._db = utils.couch_connect()
+        self.api = Api()
 
     @cherrypy.expose()
     @cherrypy.tools.no_index()
