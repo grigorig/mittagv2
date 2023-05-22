@@ -2,7 +2,7 @@ pdfminer.six==20181108
 chardet==3.0.4
 recordclass==0.7
 lxml==4.2.5
-requests==2.20.1
+requests==2.31.0
 schedule==0.5.0
 CherryPy==18.2.0
 cloudant==2.12.0
